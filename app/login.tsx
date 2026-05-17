@@ -21,14 +21,12 @@ const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [loginType, setLoginType] = useState<'mobile' | 'email'>('mobile');
-  // Mobile placeholder input
-  const [inputValue, setInputValue] = useState('');
   // Email auth fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Toggle between Sign‑In and Sign‑Up when in email mode
+  // Toggle between Sign-In and Sign-Up
   const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
   const logoScale = useRef(new Animated.Value(0.5)).current;
@@ -55,21 +53,26 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
-  const handleLogin = async () => {
+  const handleAuth = async () => {
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    if (!trimmedEmail || !trimmedPassword) {
+      Alert.alert('Missing details', 'Please enter both email and password.');
+      return;
+    }
+    setLoading(true);
     try {
-      if (loginType === 'email') {
-        if (isSignUp) {
-          await signUp(inputValue.trim(), password.trim());
-          Alert.alert('Success', 'Your account has been created successfully!');
-        } else {
-          await signIn(inputValue.trim(), password.trim());
-        }
+      if (isSignUp) {
+        await signUp(trimmedEmail, trimmedPassword);
+        Alert.alert('Success', 'Your account has been created successfully!');
       } else {
-        // Mobile login placeholder – keep navigation for now
+        await signIn(trimmedEmail, trimmedPassword);
       }
       router.replace('/(tabs)');
     } catch (e: any) {
       Alert.alert('Authentication error', e.message ?? 'Unexpected error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,7 +93,7 @@ export default function LoginScreen() {
         </Animated.View>
       </View>
 
-      {/* Login form */}
+      {/* Auth form */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.formSection}
@@ -104,80 +107,33 @@ export default function LoginScreen() {
             },
           ]}
         >
-          <Text style={styles.welcomeText}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-
-          {/* Toggle mobile / email */}
-          <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                loginType === 'mobile' && styles.toggleBtnActive,
-              ]}
-              onPress={() => setLoginType('mobile')}
-              activeOpacity={0.7}
-            >
-              <FontAwesome5
-                name="mobile-alt"
-                size={14}
-                color={loginType === 'mobile' ? Colors.white : Colors.primary}
-              />
-              <Text
-                style={[
-                  styles.toggleText,
-                  loginType === 'mobile' && styles.toggleTextActive,
-                ]}
-              >
-                Mobile
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                loginType === 'email' && styles.toggleBtnActive,
-              ]}
-              onPress={() => setLoginType('email')}
-              activeOpacity={0.7}
-            >
-              <FontAwesome5
-                name="envelope"
-                size={14}
-                color={loginType === 'email' ? Colors.white : Colors.primary}
-              />
-              <Text
-                style={[
-                  styles.toggleText,
-                  loginType === 'email' && styles.toggleTextActive,
-                ]}
-              >
-                Email
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.welcomeText}>
+            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {isSignUp
+              ? 'Sign up with your email to get started'
+              : 'Sign in with your email to continue'}
+          </Text>
 
           {/* Input fields */}
           <View style={styles.inputGroup}>
             <View style={styles.inputWrapper}>
               <FontAwesome5
-                name={loginType === 'mobile' ? 'phone-alt' : 'at'}
+                name="at"
                 size={16}
                 color={Colors.primary}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
-                placeholder={
-                  loginType === 'mobile'
-                    ? 'Enter Mobile Number'
-                    : 'Enter Email Address'
-                }
+                placeholder="Enter Email Address"
                 placeholderTextColor={Colors.placeholder}
-                value={inputValue}
-                onChangeText={setInputValue}
-                keyboardType={
-                  loginType === 'mobile' ? 'phone-pad' : 'email-address'
-                }
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
                 autoCapitalize="none"
+                autoComplete="email"
               />
             </View>
 
@@ -199,43 +155,41 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
+          {!isSignUp && (
+            <TouchableOpacity style={styles.forgotBtn}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          )}
 
-          {/* Login Button */}
+          {/* Submit Button */}
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={handleLogin}
+            onPress={handleAuth}
             activeOpacity={0.85}
+            disabled={loading}
           >
             <Text style={styles.loginButtonText}>
-              {loginType === 'email' && isSignUp ? 'Sign Up' : 'Sign In'}
+              {loading
+                ? 'Please wait...'
+                : isSignUp
+                ? 'Sign Up'
+                : 'Sign In'}
             </Text>
-            <FontAwesome5 name="arrow-right" size={16} color={Colors.white} />
+            {!loading && (
+              <FontAwesome5 name="arrow-right" size={16} color={Colors.white} />
+            )}
           </TouchableOpacity>
 
           {/* Footer */}
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>
-              {loginType === 'email'
-                ? (isSignUp ? 'Already have an account? ' : "Don't have an account? ")
+              {isSignUp
+                ? 'Already have an account? '
                 : "Don't have an account? "}
             </Text>
-            <TouchableOpacity
-              onPress={() => {
-                if (loginType === 'email') {
-                  setIsSignUp(!isSignUp);
-                } else {
-                  setLoginType('email');
-                  setIsSignUp(true);
-                }
-              }}
-            >
+            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
               <Text style={styles.footerLink}>
-                {loginType === 'email'
-                  ? (isSignUp ? 'Sign In' : 'Sign Up')
-                  : 'Contact Admin'}
+                {isSignUp ? 'Sign In' : 'Sign Up'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -322,35 +276,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 24,
   },
-  toggleRow: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    padding: 4,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
-  toggleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 6,
-  },
-  toggleBtnActive: {
-    backgroundColor: Colors.primary,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  toggleTextActive: {
-    color: Colors.white,
-  },
   inputGroup: {
     gap: 14,
   },
@@ -375,7 +300,6 @@ const styles = StyleSheet.create({
   forgotBtn: {
     alignSelf: 'flex-end',
     marginTop: 12,
-    marginBottom: 28,
   },
   forgotText: {
     fontSize: 13,
@@ -386,6 +310,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     height: 54,
     borderRadius: 16,
+    marginTop: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
