@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 // Nhost authentication helpers
-import { signIn, signUp } from '../../store/auth';
+import { signIn, signUp } from '../store/auth';
 
 const { width } = Dimensions.get('window');
 

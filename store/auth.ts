@@ -64,7 +64,8 @@ export async function signOut() {
   try {
     console.log('[Nhost Auth] Sign-out requested');
     const { error } = await nhost.auth.signOut();
-    if (error) throw error;
+    // No active session is not a real failure — just clear local state.
+    if (error && (error as any).error !== 'unauthenticated-user') throw error;
     useAppStore.getState().clearAuthUser();
   } catch (e) {
     console.error('[Nhost Auth] Sign-out failed:', e);
