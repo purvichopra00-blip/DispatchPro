@@ -9,18 +9,26 @@ import {
   Platform,
   Animated,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
+// Nhost authentication helpers
+import { signIn, signUp } from '../../store/auth';
 
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const router = useRouter();
   const [loginType, setLoginType] = useState<'mobile' | 'email'>('mobile');
+  // Mobile placeholder input
   const [inputValue, setInputValue] = useState('');
+  // Email auth fields
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Toggle between Sign‑In and Sign‑Up when in email mode
+  const [isSignUp, setIsSignUp] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
   const logoScale = useRef(new Animated.Value(0.5)).current;
@@ -47,8 +55,22 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
-  const handleLogin = () => {
-    router.replace('/(tabs)');
+  const handleLogin = async () => {
+    try {
+      if (loginType === 'email') {
+        if (isSignUp) {
+          await signUp(inputValue.trim(), password.trim());
+          Alert.alert('Success', 'Your account has been created successfully!');
+        } else {
+          await signIn(inputValue.trim(), password.trim());
+        }
+      } else {
+        // Mobile login placeholder – keep navigation for now
+      }
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Authentication error', e.message ?? 'Unexpected error');
+    }
   };
 
   return (
@@ -187,15 +209,34 @@ export default function LoginScreen() {
             onPress={handleLogin}
             activeOpacity={0.85}
           >
-            <Text style={styles.loginButtonText}>Sign In</Text>
+            <Text style={styles.loginButtonText}>
+              {loginType === 'email' && isSignUp ? 'Sign Up' : 'Sign In'}
+            </Text>
             <FontAwesome5 name="arrow-right" size={16} color={Colors.white} />
           </TouchableOpacity>
 
           {/* Footer */}
           <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity>
-              <Text style={styles.footerLink}>Contact Admin</Text>
+            <Text style={styles.footerText}>
+              {loginType === 'email'
+                ? (isSignUp ? 'Already have an account? ' : "Don't have an account? ")
+                : "Don't have an account? "}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (loginType === 'email') {
+                  setIsSignUp(!isSignUp);
+                } else {
+                  setLoginType('email');
+                  setIsSignUp(true);
+                }
+              }}
+            >
+              <Text style={styles.footerLink}>
+                {loginType === 'email'
+                  ? (isSignUp ? 'Sign In' : 'Sign Up')
+                  : 'Contact Admin'}
+              </Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

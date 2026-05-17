@@ -1,10 +1,11 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { useAppStore } from '@/store/useAppStore';
 
 export {
   ErrorBoundary,
@@ -17,6 +18,9 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter();
+  const authUser = useAppStore(state => state.authUser);
+
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
@@ -29,8 +33,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      if (authUser) {
+        console.log('[RootLayout] Found existing auth user:', authUser.email);
+        router.replace('/(tabs)');
+      }
     }
-  }, [loaded]);
+  }, [loaded, authUser]);
 
   if (!loaded) {
     return null;
