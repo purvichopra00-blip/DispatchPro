@@ -19,7 +19,7 @@ import {
   ArrowRight, CheckCircle, ClipboardList, Truck, Check, AlertCircle, Users 
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore, Tender } from '@/store/useAppStore';
 import { useUiStore } from '@/store/useUiStore';
 
 const { width } = Dimensions.get('window');

@@ -93,7 +93,7 @@ export default function DispatchesScreen() {
   const [isAdding, setIsAdding] = useState(false);
 
   const dispatches = useAppStore(state => state.dispatches);
-  const customers = useAppStore(state => state.customers);
+  const customers = useAppStore(state => state.contacts);
   const updateDispatchRequest = useAppStore(state => state.updateDispatchRequest);
   const setSidebarOpen = useUiStore(state => state.setSidebarOpen);
 

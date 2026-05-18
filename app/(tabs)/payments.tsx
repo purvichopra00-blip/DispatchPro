@@ -13,8 +13,8 @@ import {
   KeyboardAvoidingView
 } from 'react-native';
 import { 
-  Menu, Download, Receipt, CheckCircle, Clock, 
-  ArrowUpRight, X, Printer, IndianRupee, FileText, Plus, AlertCircle 
+  Menu, Download, Receipt, CheckCircle, Clock,
+  ArrowUpRight, X, Printer, IndianRupee, FileText, Plus, AlertCircle, Building2
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { useAppStore } from '@/store/useAppStore';

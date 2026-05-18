@@ -1,5 +1,6 @@
 import { nhost } from './nhost';
 import { useAppStore } from './useAppStore';
+import { setAuthToken } from './api';
 
 // TypeScript types for the authenticated user
 export type AuthUser = {
@@ -24,6 +25,7 @@ export async function signUp(email: string, password: string) {
     
     const user = session?.user ?? null;
     if (user) {
+      setAuthToken(session?.accessToken);
       useAppStore.getState().setAuthUser(user);
     }
     return user;
@@ -48,6 +50,7 @@ export async function signIn(email: string, password: string) {
 
     const user = session?.user ?? null;
     if (user) {
+      setAuthToken(session?.accessToken);
       useAppStore.getState().setAuthUser(user);
     }
     return user;
@@ -78,8 +81,12 @@ nhost.auth.onAuthStateChanged((event, session) => {
   console.log('[Nhost Auth] State Change Event:', event);
   const user = session?.user ?? null;
   if (user) {
+    setAuthToken(session?.accessToken);
     useAppStore.getState().setAuthUser(user);
+    // Session (and JWT) are ready here — load all DB-backed data.
+    useAppStore.getState().hydrate();
   } else {
+    setAuthToken(undefined);
     useAppStore.getState().clearAuthUser();
   }
 });
